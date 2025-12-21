@@ -1,0 +1,35 @@
+{
+  "ar_objects": [
+    {
+      "id": "duck_01",
+      "name": "Canard 3D",
+      "model_url": "https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Duck/glTF-Binary/Duck.glb",
+      "scale": [0.2, 0.2, 0.2],
+      "description": "Modèle de canard classique pour tests AR"
+    },
+    {
+      "id": "cube_01",
+      "name": "Cube Simple",
+      "model_url": "assets/models/cube.glb",
+      "scale": [0.1, 0.1, 0.1],
+      "description": "Cube basique pour tests de placement"
+    },
+    {
+      "id": "sphere_01",
+      "name": "Sphère Colorée",
+      "model_url": "assets/models/sphere.glb",
+      "scale": [0.15, 0.15, 0.15],
+      "description": "Sphère pour tests de rotation"
+    }
+  ],
+  "ar_presets": {
+    "default_scale": [0.2, 0.2, 0.2],
+    "default_position": [0.0, 0.0, 0.0],
+    "default_rotation": [1.0, 0.0, 0.0, 0.0]
+  },
+  "test_coordinates": [
+    {"x": 0.0, "y": 0.0, "z": -0.5},
+    {"x": 0.2, "y": 0.0, "z": -0.3},
+    {"x": -0.2, "y": 0.0, "z": -0.7}
+  ]
+}

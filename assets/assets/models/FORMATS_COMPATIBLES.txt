@@ -1,0 +1,40 @@
+📁 FORMATS DE FICHIERS 3D COMPATIBLES - GARIBOBO RA
+
+✅ FORMATS SUPPORTÉS (par ordre de priorité) :
+
+🥇 RECOMMANDÉS (Meilleur support AR) :
+   .glb    - GL Transmission Format Binary (MEILLEUR CHOIX)
+   .gltf   - GL Transmission Format (avec fichiers séparés)
+
+🥈 COMPATIBLES (Support correct) :
+   .obj    - Wavefront OBJ (avec .mtl pour matériaux)
+   .dae    - Collada (format XML)
+
+🥉 LIMITÉS (Conversion recommandée) :
+   .fbx    - Autodesk FBX (convertir en GLB)
+   .3ds    - 3D Studio (convertir en GLB)
+
+❌ NON SUPPORTÉS :
+   .stl    - Stereolithography (pas de textures)
+   .ply    - Polygon File Format
+   .blend  - Blender natif
+   .max    - 3ds Max natif
+   .c4d    - Cinema 4D natif
+   .x3d    - X3D format
+
+🎯 RECOMMANDATIONS POUR GARIBOBO RA :
+   - Format principal : .glb (compact, optimisé)
+   - Taille maximum : 5MB par fichier
+   - Polygones : < 10,000 triangles
+   - Textures : 1024x1024px maximum
+
+📥 SOURCES DE MODÈLES GRATUITS :
+   - Khronos glTF Samples (GitHub)
+   - Sketchfab (modèles gratuits)
+   - Google Poly (archive)
+
+🛠️ OUTILS DE CONVERSION :
+   - Blender (gratuit) : Export GLB/GLTF
+   - Online converters : aspose.app/3d/conversion
+
+💡 CONSEIL : Commencez avec les modèles d'exemple du script download_samples.bat
