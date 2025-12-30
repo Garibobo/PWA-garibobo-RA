@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Visualiseur 3D AR pour les cours d'électricité - Garibobo">
+    <meta name="theme-color" content="#1976D2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1565C0" media="(prefers-color-scheme: dark)">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="RA Garibobo">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="icons/favicon_RA/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon_RA/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon_RA/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/favicon_RA/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/favicon_RA/android-chrome-512x512.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/favicon_RA/apple-touch-icon.png">
+    
+    <title>Garibobo RA - Visualiseur 3D</title>
+    
+    <!-- Model Viewer -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Theme Init (avant chargement DOM pour éviter flash) -->
+    <script>
+        // Appliquer le thème immédiatement
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <img src="icons/favicon_RA/android-chrome-192x192.png" alt="Logo Garibobo RA" class="logo">
+            <h1>Garibobo RA</h1>
+            <p class="subtitle">Visualiseur 3D - Domaine 3 Électricité</p>
+            <div class="header-links">
+                <a href="https://garibobo.github.io/epsic-students/" target="_blank" class="header-icon" title="Site Internet Garibobo">
+                    <img src="icons/favicon_site/android-chrome-192x192.png" alt="Site Internet Garibobo" width="28" height="28">
+                </a>
+                <a href="https://garibobo.github.io/PWA-garibobo-agenda/" target="_blank" class="header-icon" title="Garibobo Agenda">
+                    <img src="icons/favicon_agenda/android-chrome-192x192.png" alt="Garibobo Agenda" width="28" height="28">
+                </a>
+            </div>
+            <button class="theme-toggle" id="themeToggle" aria-label="Changer le thème">
+                <span class="theme-icon">🌙</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>📂 Cours</h2>
+                <button class="toggle-sidebar" id="toggleSidebar" aria-label="Toggle sidebar">
+                    <span>☰</span>
+                </button>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Rechercher un cours...">
+            </div>
+            <button class="btn-add-model" id="btnAddModel">➕ Ajouter un modèle</button>
+            <nav class="file-tree" id="fileTree">
+                <div class="loading">Chargement des cours...</div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Welcome Screen -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-content">
+                    <h2>👋 Bienvenue dans Garibobo RA</h2>
+                    <p>Sélectionnez un modèle 3D dans le menu de gauche pour commencer.</p>
+                    <div class="platform-info" id="platformInfo" style="margin: 1rem 0; padding: 0.75rem; background: var(--surface); border-radius: 8px; border-left: 4px solid var(--primary-color);"></div>
+                    <div class="features">
+                        <div class="feature">
+                            <span class="feature-icon">📱</span>
+                            <h3>Compatible Mobile</h3>
+                            <p>Fonctionne sur Android et iOS</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">🥽</span>
+                            <h3>Réalité Augmentée</h3>
+                            <p>Visualisez les modèles en AR</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">🎬</span>
+                            <h3>Animations 3D</h3>
+                            <p>Modèles animés automatiquement</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3D Viewer -->
+            <div class="viewer-container" id="viewerContainer" style="display: none;">
+                <div class="viewer-header">
+                    <h2 id="modelTitle">Modèle 3D</h2>
+                    <div class="viewer-actions">
+                        <button class="btn-primary" id="btnAR">🥽 Voir en AR</button>
+                        <button class="btn-secondary desktop-only" id="btnFullscreen">⛶ Plein écran</button>
+                        <button class="btn-secondary desktop-only" id="btnPlayPause" style="display: none;">▶️ Lecture</button>
+                        <button class="btn-secondary desktop-only" id="btnReset">🔄 Réinitialiser</button>
+                        <button class="btn-secondary desktop-only" id="btnFlip">🔃 Retourner</button>
+                        <button class="btn-secondary" id="btnZoom">🔍 Zoom</button>
+                        <button class="btn-secondary" id="btnDetails">ℹ️ Détails</button>
+                        <button class="btn-secondary desktop-only" id="btnScreenshot">📸 Capturer</button>
+                        <div class="dropdown">
+                            <button class="btn-secondary dropdown-toggle" id="btnOptions">⚙️ Options</button>
+                            <div class="dropdown-menu" id="dropdownMenu">
+                                <button class="dropdown-item mobile-only" id="btnPlayPauseMobile" style="display: none;">
+                                    <span class="icon">▶️</span>
+                                    <span class="text">Lecture</span>
+                                </button>
+                                <button class="dropdown-item mobile-only" id="btnResetMobile">
+                                    <span class="icon">🔄</span>
+                                    <span class="text">Réinitialiser</span>
+                                </button>
+                                <button class="dropdown-item mobile-only" id="btnFullscreenMobile">
+                                    <span class="icon">⛶</span>
+                                    <span class="text">Plein écran</span>
+                                </button>
+                                <button class="dropdown-item mobile-only" id="btnFlipMobile">
+                                    <span class="icon">🔃</span>
+                                    <span class="text">Retourner</span>
+                                </button>
+                                <div class="dropdown-divider mobile-only"></div>
+                                <button class="dropdown-item" id="btnToggleAnnotations">
+                                    <span class="icon" id="annotationsIcon">👁️</span>
+                                    <span class="text">Annotations</span>
+                                </button>
+                                <button class="dropdown-item" id="btnMeasure">
+                                    <span class="icon">📏</span>
+                                    <span class="text">Mesures AR</span>
+                                </button>
+                                <button class="dropdown-item" id="btnLighting">
+                                    <span class="icon">💡</span>
+                                    <span class="text">Éclairage réaliste</span>
+                                </button>
+                                <button class="dropdown-item" id="btnGestures">
+                                    <span class="icon">👆</span>
+                                    <span class="text">Gestes avancés</span>
+                                </button>
+                                <button class="dropdown-item" id="btnFavorites">
+                                    <span class="icon">⭐</span>
+                                    <span class="text">Favoris</span>
+                                </button>
+                                <button class="dropdown-item" id="btnQuiz">
+                                    <span class="icon">🎓</span>
+                                    <span class="text">Quiz interactif</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="model-viewer-wrapper">
+                    <model-viewer
+                        id="modelViewer"
+                        camera-controls
+                        touch-action="pan-y"
+                        auto-rotate
+                        autoplay
+                        animation-name="*"
+                        shadow-intensity="1"
+                        exposure="1"
+                        shadow-softness="0.5"
+                        environment-image="neutral"
+                        ar
+                        ar-modes="webxr scene-viewer quick-look"
+                        ar-scale="auto"
+                        ar-placement="wall floor"
+                        camera-orbit="0deg 75deg 105%"
+                        min-camera-orbit="auto -180deg 5%"
+                        max-camera-orbit="auto 180deg 500%"
+                        disable-tap
+                        loading="eager"
+                        reveal="auto"
+                        alt="Modèle 3D"
+                        interaction-prompt="none"
+                        poster=""
+                    >
+                        <div class="progress-bar" slot="progress-bar">
+                            <div class="update-bar"></div>
+                        </div>
+                        <button slot="ar-button" id="ar-button" class="ar-button">
+                            🥽 Voir en AR
+                        </button>
+                        <div id="ar-prompt" class="ar-prompt">
+                            <img src="https://modelviewer.dev/shared-assets/icons/hand.png" alt="AR prompt">
+                        </div>
+                        
+                        <!-- Hotspots (annotations) - seront ajoutés dynamiquement -->
+                        <div id="hotspots-container"></div>
+                    </model-viewer>
+                </div>
+
+                <div class="model-info" id="modelInfo">
+                    <div class="info-item">
+                        <span class="info-label">📁 Dossier:</span>
+                        <span class="info-value" id="modelFolder">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">📄 Fichier:</span>
+                        <span class="info-value" id="modelFile">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">📱 Format:</span>
+                        <span class="info-value" id="modelFormat">-</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Réalisé par Amir Garibovic - Domaine 3 Électricité - V.1.49.0</p>
+    </footer>
+
+    <!-- Install Prompt -->
+    <div class="install-prompt" id="installPrompt" style="display: none;">
+        <div class="install-content">
+            <p>📱 Installer Garibobo RA sur votre appareil</p>
+            <button class="btn-primary" id="btnInstall">Installer</button>
+            <button class="btn-secondary" id="btnDismiss">Plus tard</button>
+        </div>
+    </div>
+
+    <!-- Add Model Modal -->
+    <div class="modal" id="addModelModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>➕ Ajouter un modèle 3D</h2>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="add-options">
+                    <div class="add-option">
+                        <h3>📁 Depuis votre appareil</h3>
+                        <p>Sélectionnez un fichier .glb (Android) ou .usdz (iOS)</p>
+                        <input type="file" id="fileInput" accept=".glb,.usdz" style="display: none;">
+                        <button class="btn-primary" id="btnSelectFile">Choisir un fichier</button>
+                    </div>
+                    <div class="divider">OU</div>
+                    <div class="add-option">
+                        <h3>🔗 Depuis une URL</h3>
+                        <p>Collez le lien direct vers un fichier .glb ou .usdz</p>
+                        <input type="url" id="urlInput" placeholder="https://exemple.com/modele.glb">
+                        <button class="btn-primary" id="btnLoadUrl">Charger depuis l'URL</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zoom Modal -->
+    <div class="modal" id="zoomModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔍 Contrôle du zoom</h2>
+                <button class="modal-close" id="closeZoomModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Sélectionnez un niveau de zoom :</p>
+                <div class="zoom-controls">
+                    <button class="zoom-btn btn-secondary" data-zoom="25%">🔍 Très proche (25%)</button>
+                    <button class="zoom-btn btn-secondary" data-zoom="50%">🔍 Proche (50%)</button>
+                    <button class="zoom-btn btn-secondary" data-zoom="75%">🔍 Moyen (75%)</button>
+                    <button class="zoom-btn btn-secondary" data-zoom="100%">🔍 Normal (100%)</button>
+                    <button class="zoom-btn btn-secondary" data-zoom="150%">🔍 Éloigné (150%)</button>
+                    <button class="zoom-btn btn-secondary" data-zoom="200%">🔍 Très éloigné (200%)</button>
+                </div>
+                <div class="zoom-slider">
+                    <label for="zoomSlider">Zoom personnalisé :</label>
+                    <input type="range" id="zoomSlider" min="10" max="300" value="100" step="5">
+                    <span id="zoomValue">100%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Favorites Modal -->
+    <div class="modal" id="favoritesModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⭐ Mes favoris</h2>
+                <button class="modal-close" id="closeFavoritesModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="favoritesList" class="favorites-list">
+                    <!-- Favoris seront ajoutés dynamiquement -->
+                </div>
+                <div id="emptyFavorites" class="empty-state" style="display: none;">
+                    <p>📭 Aucun favori pour le moment</p>
+                    <p>Cliquez sur ⭐ dans le menu Options pour ajouter le modèle actuel à vos favoris.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Scripts -->
+    <script src="main.js"></script>
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker enregistré:', reg))
+                    .catch(err => console.log('Erreur Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+</html>
