@@ -1,0 +1,42 @@
+{
+  "currentVersion": "1.50.0",
+  "lastUpdateCheck": null,
+  "updates": [
+    {
+      "version": "1.50.0",
+      "date": "2024-12-30",
+      "title": "Optimisation complète du header et uniformisation des icônes",
+      "changes": [
+        "Uniformisation des icônes header à 40px (Site Internet, Agenda, Mode sombre)",
+        "Utilisation cohérente de android-chrome-192x192.png pour toutes les icônes",
+        "Réduction du logo principal de 80px à 60px pour meilleur équilibre visuel",
+        "Amélioration des espacements header (gap: 0.75rem)",
+        "Correction complète du responsive mobile (36px sur smartphones)",
+        "Nettoyage du code CSS obsolète (suppression .header-links)",
+        "Optimisation des touch targets pour mobile (44px minimum)",
+        "Amélioration de la cohérence visuelle sur tous les appareils",
+        "Correction des tailles d'icônes dans les media queries",
+        "Système de changelog automatique implémenté"
+      ],
+      "type": "fix"
+    },
+    {
+      "version": "1.49.0",
+      "date": "2024-12-30",
+      "title": "Optimisation responsive et corrections Samsung Internet",
+      "changes": [
+        "Optimisation responsive complète pour tous les appareils (PC, Mac, tablettes, smartphones)",
+        "Correction du mode sombre sur Samsung Internet Android",
+        "Correction de l'icône PWA tronquée sur Samsung Internet",
+        "Ajout des meta tags spécifiques Samsung Internet",
+        "Agrandissement des icônes de navigation dans le header (33px)",
+        "Mise à jour dynamique du theme-color lors du toggle",
+        "Amélioration de la lisibilité du header en mode clair",
+        "Script inline pour application immédiate du thème",
+        "Icônes de navigation vers Site Internet Garibobo et Garibobo Agenda",
+        "Changement du nom court: 'Garibobo RA' → 'RA Garibobo'"
+      ],
+      "type": "fix"
+    }
+  ]
+}
