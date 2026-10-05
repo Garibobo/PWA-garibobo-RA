@@ -1,7 +1,34 @@
 {
-  "currentVersion": "1.52.2",
+  "currentVersion": "1.53.1",
   "lastUpdateCheck": null,
   "updates": [
+    {
+      "version": "1.53.1",
+      "date": "2026-10-04",
+      "title": "Changer la couleur directement en réalité augmentée (Android)",
+      "changes": [
+        "Nouvelle option « Mode RA » dans ⚙️ Options (Android) : Natif (pourcentage de taille) ou Web (couleurs en RA)",
+        "Mode RA Web : bandeau de pastilles de couleurs en bas de l'écran pendant la RA, changement de couleur en direct",
+        "Mode RA Natif (par défaut) : inchangé, avec un message qui indique comment changer la couleur en RA",
+        "Choix mémorisé sur l'appareil",
+        "Cache Service Worker v1.6 → v1.7"
+      ],
+      "type": "feature"
+    },
+    {
+      "version": "1.53.0",
+      "date": "2026-10-04",
+      "title": "Sélecteur de couleurs des appareillages",
+      "changes": [
+        "Nouveau sélecteur « 🎨 Couleur » sous le viewer pour les modèles qui proposent plusieurs couleurs (ex. Feller Edizio due : Blanc, Noir, Gris clair…)",
+        "Pastilles adaptées au smartphone avec défilement horizontal",
+        "Sur iPhone, la réalité augmentée affiche la couleur choisie",
+        "Sur Android, la réalité augmentée affiche la couleur par défaut (un message l'indique)",
+        "La couleur choisie est conservée lors du basculement des annotations et réinitialisée au changement de modèle",
+        "Cache Service Worker v1.5 → v1.6"
+      ],
+      "type": "feature"
+    },
     {
       "version": "1.52.2",
       "date": "2026-10-04",

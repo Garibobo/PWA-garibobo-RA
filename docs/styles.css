@@ -824,6 +824,127 @@ model-viewer > #ar-prompt > img {
     }
 }
 
+/* Sélecteur de couleurs (variantes KHR_materials_variants) */
+.variant-selector {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background-color: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+}
+
+.variant-selector[hidden] {
+    display: none;
+}
+
+.variant-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.variant-list {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    padding-bottom: 0.25rem;
+}
+
+.variant-list::-webkit-scrollbar {
+    height: 6px;
+}
+
+.variant-list::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 3px;
+}
+
+.variant-btn {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0 1rem;
+    border-radius: 22px;
+    border: 2px solid var(--border-color);
+    background-color: var(--surface-light);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color var(--transition), background-color var(--transition);
+}
+
+.variant-btn:hover {
+    border-color: var(--primary-color);
+}
+
+.variant-btn.active {
+    border-color: var(--primary-color);
+    background-color: var(--primary-color);
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Bandeau de couleurs en RA WebXR : affiché seulement pendant la session RA */
+model-viewer > #arVariants {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 24px;
+    padding: 0 12px;
+}
+
+model-viewer[ar-status="session-started"] > #arVariants,
+model-viewer[ar-status="object-placed"] > #arVariants {
+    display: block;
+}
+
+model-viewer > #arVariants[hidden] {
+    display: none !important;
+}
+
+.ar-variant-list {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding: 8px;
+    border-radius: 28px;
+    background-color: rgba(0, 0, 0, 0.55);
+}
+
+.ar-variant-list::-webkit-scrollbar {
+    display: none;
+}
+
+.ar-variant-list .variant-btn {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #212121;
+    border-color: transparent;
+}
+
+.ar-variant-list .variant-btn.active {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: #fff;
+}
+
+.variant-info {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.variant-info[hidden] {
+    display: none;
+}
+
 /* Model Info */
 .model-info {
     margin-top: 1.5rem;
@@ -1307,7 +1428,6 @@ model-viewer > #ar-prompt > img {
     padding: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling sur iOS */
 }
 
 .viewer-container:fullscreen .viewer-header {
@@ -1339,7 +1459,6 @@ model-viewer > #ar-prompt > img {
     padding: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
 }
 
 .viewer-container:-webkit-full-screen .viewer-header {

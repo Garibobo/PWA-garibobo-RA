@@ -148,6 +148,10 @@
                                     <span class="icon" id="placementIcon">⬇️</span>
                                     <span class="text" id="placementLabel">Placement RA : Sol</span>
                                 </button>
+                                <button class="dropdown-item" id="btnArMode">
+                                    <span class="icon" id="arModeIcon">📲</span>
+                                    <span class="text" id="arModeLabel">Mode RA : Natif (pourcentage)</span>
+                                </button>
                                 <button class="dropdown-item" id="btnToggleAnnotations">
                                     <span class="icon" id="annotationsIcon">👁️</span>
                                     <span class="text">Annotations</span>
@@ -214,9 +218,20 @@
                             <img src="icons/hand.png" alt="AR prompt">
                         </div>
                         
+                        <!-- Bandeau de couleurs visible uniquement en RA WebXR (Mode RA : Web) -->
+                        <div class="ar-variants" id="arVariants" hidden>
+                            <div class="ar-variant-list" id="arVariantList" role="group" aria-label="Couleurs disponibles en RA"></div>
+                        </div>
+                        
                         <!-- Hotspots (annotations) - seront ajoutés dynamiquement -->
                         <div id="hotspots-container"></div>
                     </model-viewer>
+                </div>
+
+                <div class="variant-selector" id="variantSelector" hidden>
+                    <span class="variant-label">🎨 Couleur :</span>
+                    <div class="variant-list" id="variantList" role="group" aria-label="Couleurs disponibles"></div>
+                    <p class="variant-info" id="variantInfo" hidden>ℹ️ En RA, le modèle s'affiche dans sa couleur par défaut. Pour changer la couleur directement en RA : ⚙️ Options → Mode RA : Web.</p>
                 </div>
 
                 <div class="model-info" id="modelInfo">
@@ -239,7 +254,7 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p>Réalisé par Amir Garibovic - Domaine 3 Électricité - V.1.52.2</p>
+        <p>Réalisé par Amir Garibovic - Domaine 3 Électricité - V.1.53.1</p>
     </footer>
 
     <!-- Install Prompt -->

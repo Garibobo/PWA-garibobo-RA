@@ -4,6 +4,37 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 
 ---
 
+## [V.1.53.1] - 4 Octobre 2026
+
+### ✨ Ajouté
+- Option **« Mode RA : Natif / Web »** dans ⚙️ Options (Android uniquement, persistée dans `localStorage` clé `ar_mode`)
+  - Natif (défaut) : `ar-modes="scene-viewer webxr quick-look"` — pourcentage de taille, pincement
+  - Web : `ar-modes="webxr scene-viewer quick-look"` — options HTML visibles en RA (DOM overlay)
+- Bandeau de couleurs `#arVariants` dans `<model-viewer>`, affiché seulement si `ar-status` = `session-started` / `object-placed` ; `beforexrselect` bloqué pour que toucher une pastille ne déplace pas le modèle
+- Fonctions `applyArModes()`, `highlightVariant()`, `updateVariantInfo()` dans `main.js`
+
+### 🔄 Modifié
+- Message d'info Android : affiché uniquement en mode Natif, indique comment passer en mode Web
+- Service Worker : cache `v1.6` → `v1.7`
+
+---
+
+## [V.1.53.0] - 4 Octobre 2026 — LOT 2 : sélecteur de couleurs
+
+### ✨ Ajouté
+- Sélecteur de couleurs (`#variantSelector`) sous le viewer, construit à chaque événement `load` à partir de `availableVariants` (extension `KHR_materials_variants`), dans l'ordre du fichier ; masqué si le modèle n'a pas de variantes
+- Clic sur une pastille → `variantName`, pastille active mise en évidence (`aria-pressed`) ; au chargement, la première pastille (couleur par défaut du fichier) est active
+- Pastilles ≥ 44 px, défilement horizontal sur smartphone
+- Message d'information sur Android quand une couleur autre que la couleur par défaut est choisie (Scene Viewer lit le `.glb` brut)
+- Fonctions `setupVariantSelector()`, `resetVariantSelector()` et `updateIosSource()` dans `main.js`
+
+### 🔄 Modifié
+- iOS : le `.usdz` compagnon n'est utilisé que pour la couleur par défaut ; pour une autre couleur, `ios-src` est retiré et model-viewer génère le USDZ avec la couleur affichée
+- Couleur choisie conservée lors du basculement annotations, réinitialisée au changement de modèle
+- Service Worker : cache `v1.5` → `v1.6`
+
+---
+
 ## [V.1.52.2] - 4 Octobre 2026
 
 ### 🔄 Modifié

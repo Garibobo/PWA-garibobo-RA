@@ -1,7 +1,7 @@
 // Garibobo RA - Main JavaScript
 // Scan automatique et affichage des modèles 3D
 
-const VERSION = 'V.1.52.2';
+const VERSION = 'V.1.53.1';
 
 const CONFIG = {
     coursePath: '../Cours/',
@@ -23,10 +23,12 @@ const state = {
     isAndroid: false,
     knownUsdz: new Set(), // URLs des .usdz compagnons détectés
     arPlacement: localStorage.getItem('ar_placement') || 'floor',
+    arMode: localStorage.getItem('ar_mode') || 'native', // Android : 'native' (Scene Viewer) ou 'web' (WebXR)
     annotations: new Map(), // Annotations par modèle
     annotationMode: false,
     annotationsVisible: true,
-    pendingAnnotation: null
+    pendingAnnotation: null,
+    currentVariant: null // Couleur choisie (conservée lors du basculement annotations)
 };
 
 // Détecter la plateforme
@@ -51,7 +53,7 @@ function detectPlatform() {
         if (state.isIOS) {
             platformInfo.innerHTML = '<strong>🍎 iOS détecté</strong> - Réalité augmentée via Quick Look (conversion automatique du modèle)';
         } else if (state.isAndroid) {
-            platformInfo.innerHTML = '<strong>🤖 Android détecté</strong> - Réalité augmentée via WebXR ou Scene Viewer';
+            platformInfo.innerHTML = '<strong>🤖 Android détecté</strong> - Réalité augmentée via Scene Viewer ou WebXR (⚙️ Options → Mode RA)';
         } else {
             platformInfo.innerHTML = '<strong>💻 Desktop détecté</strong> - Viewer 3D interactif (RA disponible sur mobile)';
         }
@@ -68,16 +70,107 @@ function getCompanionUsdz(glbUrl) {
 // Applique src (.glb) et ios-src (.usdz compagnon si présent) au viewer
 function applyModelSources(viewer, glbUrl, usdzUrl = null) {
     viewer.src = glbUrl;
-    // Scene Viewer (Android) en priorité : pourcentage de taille + pincement sur tous les navigateurs.
-    // Il ne peut pas lire un fichier local (blob:) → WebXR dans ce cas.
-    viewer.setAttribute('ar-modes', glbUrl.startsWith('blob:') ? 'webxr quick-look' : 'scene-viewer webxr quick-look');
+    applyArModes(viewer);
     const companion = usdzUrl || getCompanionUsdz(glbUrl);
-    if (companion) {
+    updateIosSource(viewer, companion);
+}
+
+// Mode RA Android : « native » = Scene Viewer en priorité (pourcentage de taille, pincement sur tous les navigateurs) ;
+// « web » = WebXR en priorité (options visibles en RA). Scene Viewer ne lit pas les fichiers locaux (blob:) → WebXR.
+function applyArModes(viewer) {
+    const src = viewer.getAttribute('src') || '';
+    const modes = src.startsWith('blob:') ? 'webxr quick-look'
+        : state.arMode === 'web' ? 'webxr scene-viewer quick-look'
+        : 'scene-viewer webxr quick-look';
+    viewer.setAttribute('ar-modes', modes);
+}
+
+// ios-src : .usdz manuel seulement pour la couleur par défaut (il ne contient pas les variantes) ;
+// sinon model-viewer génère le USDZ à la volée avec la couleur affichée
+function updateIosSource(viewer, companion = getCompanionUsdz(viewer.src)) {
+    const variants = viewer.availableVariants || [];
+    const isDefaultVariant = !state.currentVariant || state.currentVariant === variants[0];
+    if (companion && isDefaultVariant) {
         viewer.setAttribute('ios-src', companion);
         console.log(`🍎 USDZ compagnon utilisé: ${companion}`);
     } else {
         viewer.removeAttribute('ios-src');
     }
+}
+
+// Listes de pastilles : sous le viewer + bandeau visible en RA WebXR (DOM overlay)
+const VARIANT_LISTS = ['variantList', 'arVariantList'];
+
+// Met en évidence la pastille active dans toutes les listes
+function highlightVariant(name) {
+    VARIANT_LISTS.forEach(id => document.getElementById(id).querySelectorAll('.variant-btn').forEach(btn => {
+        const isActive = btn.dataset.variant === name;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', isActive);
+    }));
+}
+
+// Message Android : en mode RA natif, Scene Viewer affiche la couleur par défaut
+function updateVariantInfo() {
+    const variants = document.getElementById('modelViewer').availableVariants || [];
+    const isDefault = !state.currentVariant || state.currentVariant === variants[0];
+    document.getElementById('variantInfo').hidden = !(state.isAndroid && state.arMode !== 'web' && !isDefault);
+}
+
+// Sélecteur de couleurs : reconstruit à chaque chargement de modèle
+function setupVariantSelector(viewer) {
+    const variants = viewer.availableVariants || [];
+    
+    VARIANT_LISTS.forEach(id => document.getElementById(id).innerHTML = '');
+    document.getElementById('variantSelector').hidden = variants.length === 0;
+    document.getElementById('arVariants').hidden = variants.length === 0;
+    if (variants.length === 0) {
+        state.currentVariant = null;
+        updateVariantInfo();
+        return;
+    }
+    
+    // Conserver la couleur choisie si elle existe encore (ex. bascule annotations), sinon couleur par défaut
+    if (!variants.includes(state.currentVariant)) state.currentVariant = null;
+    
+    const selectVariant = (name) => {
+        state.currentVariant = name;
+        viewer.variantName = name;
+        highlightVariant(name);
+        updateVariantInfo();
+        updateIosSource(viewer);
+    };
+    
+    VARIANT_LISTS.forEach(id => {
+        const list = document.getElementById(id);
+        variants.forEach(name => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'variant-btn';
+            btn.dataset.variant = name;
+            btn.textContent = name;
+            btn.onclick = () => selectVariant(name);
+            list.appendChild(btn);
+        });
+    });
+    
+    if (state.currentVariant) {
+        selectVariant(state.currentVariant);
+    } else {
+        // Couleur par défaut du fichier : pas de variantName appliqué, première pastille active
+        highlightVariant(variants[0]);
+        updateVariantInfo();
+    }
+    console.log(`🎨 ${variants.length} couleur(s) disponible(s):`, variants);
+}
+
+// Masque le sélecteur de couleurs et oublie la couleur choisie (changement de modèle)
+function resetVariantSelector() {
+    state.currentVariant = null;
+    document.getElementById('modelViewer').variantName = null;
+    document.getElementById('variantSelector').hidden = true;
+    document.getElementById('arVariants').hidden = true;
+    VARIANT_LISTS.forEach(id => document.getElementById(id).innerHTML = '');
 }
 
 // Libellé du dossier d'un modèle (chemin relatif à Cours/) ou "Local"
@@ -271,6 +364,7 @@ function loadModel(item) {
     
     // Définir le modèle actuel (important pour les annotations)
     state.currentModel = item.path;
+    resetVariantSelector();
     
     // Toujours charger le .glb ; ios-src seulement si un .usdz compagnon existe
     applyModelSources(viewer, item.path, item.usdz || null);
@@ -420,6 +514,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Barre de progression du chargement des modèles
     const modelViewer = document.getElementById('modelViewer');
+    
+    // Couleurs disponibles : à chaque chargement (nouveau modèle ou bascule annotations)
+    modelViewer.addEventListener('load', () => setupVariantSelector(modelViewer));
     const progressBar = modelViewer.querySelector('.progress-bar');
     const updateBar = modelViewer.querySelector('.update-bar');
     modelViewer.addEventListener('progress', (e) => {
@@ -438,6 +535,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (icon) icon.textContent = state.arPlacement === 'wall' ? '🧱' : '⬇️';
     }
     applyArPlacement();
+    
+    // Mode RA Android : Natif (Scene Viewer, pourcentage) ou Web (WebXR, couleurs en RA) — persisté, Android uniquement
+    function applyArModeUI() {
+        document.getElementById('arModeLabel').textContent = state.arMode === 'web' ? 'Mode RA : Web (couleurs en RA)' : 'Mode RA : Natif (pourcentage)';
+        document.getElementById('arModeIcon').textContent = state.arMode === 'web' ? '🌐' : '📲';
+        applyArModes(document.getElementById('modelViewer'));
+        updateVariantInfo();
+    }
+    if (!state.isAndroid) document.getElementById('btnArMode').style.display = 'none';
+    applyArModeUI();
+    
+    document.getElementById('btnArMode').onclick = () => {
+        state.arMode = state.arMode === 'web' ? 'native' : 'web';
+        localStorage.setItem('ar_mode', state.arMode);
+        applyArModeUI();
+        console.log(`🥽 Mode RA: ${state.arMode}`);
+    };
+    
+    // Bandeau de couleurs en RA : un toucher sur les pastilles ne doit pas déplacer le modèle
+    document.getElementById('arVariants').addEventListener('beforexrselect', (e) => e.preventDefault());
     
     document.getElementById('btnPlacement').onclick = () => {
         state.arPlacement = state.arPlacement === 'wall' ? 'floor' : 'wall';
@@ -954,6 +1071,7 @@ function loadModelFromCustomSource(item) {
     viewerContainer.style.display = 'block';
     
     state.currentModel = item.path;
+    resetVariantSelector();
     applyModelSources(viewer, item.path);
     document.getElementById('modelTitle').textContent = item.name;
     document.getElementById('modelFile').textContent = item.name;
