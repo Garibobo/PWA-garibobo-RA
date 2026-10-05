@@ -1,7 +1,19 @@
 {
-  "currentVersion": "1.52.1",
+  "currentVersion": "1.52.2",
   "lastUpdateCheck": null,
   "updates": [
+    {
+      "version": "1.52.2",
+      "date": "2026-10-04",
+      "title": "Zoom à deux doigts et pourcentage de taille en RA sur tous les navigateurs Android",
+      "changes": [
+        "Android : la RA s'ouvre en priorité dans Scene Viewer (Google) → pourcentage de taille affiché et zoom à deux doigts sur Chrome, Samsung Internet, Firefox, Edge et Opera",
+        "Samsung Internet : zoom à deux doigts réparé dans le viewer 3D",
+        "Fichiers ouverts depuis l'appareil : RA via WebXR (Scene Viewer ne peut pas les lire)",
+        "Cache Service Worker v1.4 → v1.5"
+      ],
+      "type": "fix"
+    },
     {
       "version": "1.52.1",
       "date": "2026-10-04",

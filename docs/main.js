@@ -1,7 +1,7 @@
 // Garibobo RA - Main JavaScript
 // Scan automatique et affichage des modèles 3D
 
-const VERSION = 'V.1.52.1';
+const VERSION = 'V.1.52.2';
 
 const CONFIG = {
     coursePath: '../Cours/',
@@ -39,6 +39,12 @@ function detectPlatform() {
     
     console.log(`📱 Plateforme détectée: ${platform}`);
     
+    // Samsung Internet : touch-action="pan-y" laisse le navigateur intercepter le pincement → zoom 3D inopérant
+    if (/SamsungBrowser/i.test(userAgent)) {
+        document.getElementById('modelViewer')?.setAttribute('touch-action', 'none');
+        console.log('📱 Samsung Internet : touch-action="none" pour le zoom à deux doigts');
+    }
+    
     // Afficher le message dans l'interface
     const platformInfo = document.getElementById('platformInfo');
     if (platformInfo) {
@@ -62,6 +68,9 @@ function getCompanionUsdz(glbUrl) {
 // Applique src (.glb) et ios-src (.usdz compagnon si présent) au viewer
 function applyModelSources(viewer, glbUrl, usdzUrl = null) {
     viewer.src = glbUrl;
+    // Scene Viewer (Android) en priorité : pourcentage de taille + pincement sur tous les navigateurs.
+    // Il ne peut pas lire un fichier local (blob:) → WebXR dans ce cas.
+    viewer.setAttribute('ar-modes', glbUrl.startsWith('blob:') ? 'webxr quick-look' : 'scene-viewer webxr quick-look');
     const companion = usdzUrl || getCompanionUsdz(glbUrl);
     if (companion) {
         viewer.setAttribute('ios-src', companion);

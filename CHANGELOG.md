@@ -4,6 +4,18 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 
 ---
 
+## [V.1.52.2] - 4 Octobre 2026
+
+### 🔄 Modifié
+- `ar-modes="webxr scene-viewer quick-look"` → `"scene-viewer webxr quick-look"` : sur Android, Scene Viewer est prioritaire (pourcentage de taille, pincement, placement mural via `enable_vertical_placement`) quel que soit le navigateur ; WebXR n'affiche pas de pourcentage et le pincement est défaillant sur Samsung Internet
+- `applyModelSources()` : modèles locaux (`blob:`) → `ar-modes="webxr quick-look"` (Scene Viewer exige une URL publique)
+- Service Worker : cache `v1.4` → `v1.5`
+
+### 🐛 Corrigé
+- Samsung Internet : zoom à deux doigts inopérant dans le viewer 3D → `touch-action="none"` appliqué uniquement sur ce navigateur
+
+---
+
 ## [V.1.52.1] - 4 Octobre 2026
 
 ### 🔄 Modifié
