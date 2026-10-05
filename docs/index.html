@@ -118,7 +118,7 @@
                     <div class="viewer-actions">
                         <button class="btn-primary" id="btnAR">🥽 Voir en AR</button>
                         <button class="btn-secondary desktop-only" id="btnFullscreen">⛶ Plein écran</button>
-                        <button class="btn-secondary desktop-only" id="btnPlayPause" style="display: none;">▶️ Lecture</button>
+                        <button class="btn-secondary desktop-only no-animation" id="btnPlayPause">⏸️ Pause</button>
                         <button class="btn-secondary desktop-only" id="btnReset">🔄 Réinitialiser</button>
                         <button class="btn-secondary desktop-only" id="btnFlip">🔃 Retourner</button>
                         <button class="btn-secondary" id="btnZoom">🔍 Zoom</button>
@@ -127,9 +127,9 @@
                         <div class="dropdown">
                             <button class="btn-secondary dropdown-toggle" id="btnOptions">⚙️ Options</button>
                             <div class="dropdown-menu" id="dropdownMenu">
-                                <button class="dropdown-item mobile-only" id="btnPlayPauseMobile" style="display: none;">
-                                    <span class="icon">▶️</span>
-                                    <span class="text">Lecture</span>
+                                <button class="dropdown-item mobile-only no-animation" id="btnPlayPauseMobile">
+                                    <span class="icon">⏯️</span>
+                                    <span class="text">Pause</span>
                                 </button>
                                 <button class="dropdown-item mobile-only" id="btnResetMobile">
                                     <span class="icon">🔄</span>
@@ -192,7 +192,7 @@
                         tone-mapping="neutral"
                         ar
                         ar-modes="webxr scene-viewer quick-look"
-                        ar-scale="fixed"
+                        ar-scale="auto"
                         ar-placement="floor"
                         camera-orbit="0deg 75deg 105%"
                         min-camera-orbit="auto -180deg 5%"
@@ -239,7 +239,7 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p>Réalisé par Amir Garibovic - Domaine 3 Électricité - V.1.52.0</p>
+        <p>Réalisé par Amir Garibovic - Domaine 3 Électricité - V.1.52.1</p>
     </footer>
 
     <!-- Install Prompt -->

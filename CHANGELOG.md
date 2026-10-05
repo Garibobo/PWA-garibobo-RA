@@ -4,6 +4,23 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 
 ---
 
+## [V.1.52.1] - 4 Octobre 2026
+
+### 🔄 Modifié
+- `<model-viewer>` : `ar-scale="fixed"` → `ar-scale="auto"` — le modèle démarre à 100 % (taille réelle) en RA, l'élève peut le redimensionner et le pourcentage est de nouveau affiché
+- Service Worker : cache `v1.3` → `v1.4`
+
+### 🐛 Corrigé
+- `loadModel()` appelait `updateAnnotationsOnModel()` (fonction inexistante) → erreur JS qui empêchait la détection des animations
+- Boutons Lecture/Pause : toujours visibles sur desktop à cause des règles `!important` ; désormais affichés uniquement si le modèle est animé (classe `no-animation`), y compris dans le menu mobile ; libellé initial « Pause » (autoplay)
+- Bouton Détails et Favoris : référence à un élément `#modelPath` inexistant → erreur JS ; utilisation de `state.currentModel`
+- Favoris : rechargement d'un favori passait une chaîne au lieu d'un objet à `loadModel()` ; fichiers locaux (`blob:`) exclus des favoris
+- Champ « Dossier » sous le viewer jamais rempli → nouvelle fonction `getFolderLabel()`
+- Barre de progression (`slot="progress-bar"`) jamais mise à jour → écoute de l'événement `progress`
+- Guide RA `#ar-prompt` sans CSS → affiché en permanence ; visible uniquement pendant `ar-status="session-started"`
+
+---
+
 ## [V.1.52.0] - 4 Octobre 2026
 
 ### ✨ Ajouté

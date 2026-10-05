@@ -744,6 +744,44 @@ model-viewer {
     transition: width 0.3s;
 }
 
+#btnPlayPause.no-animation,
+#btnPlayPauseMobile.no-animation {
+    display: none !important;
+}
+
+.progress-bar.hide {
+    visibility: hidden;
+    transition: visibility 0.3s;
+}
+
+/* Guide RA (main animée) : visible uniquement pendant la recherche de surface en WebXR */
+model-viewer > #ar-prompt {
+    position: absolute;
+    left: 50%;
+    bottom: 175px;
+    animation: ar-elongate 2s infinite ease-in-out alternate;
+    display: none;
+    pointer-events: none;
+}
+
+model-viewer[ar-status="session-started"] > #ar-prompt {
+    display: block;
+}
+
+model-viewer > #ar-prompt > img {
+    animation: ar-circle 4s linear infinite;
+}
+
+@keyframes ar-circle {
+    from { transform: translateX(-50%) rotate(0deg) translateX(50px) rotate(0deg); }
+    to { transform: translateX(-50%) rotate(360deg) translateX(50px) rotate(-360deg); }
+}
+
+@keyframes ar-elongate {
+    from { transform: translateX(100px); }
+    to { transform: translateX(-100px); }
+}
+
 .ar-button {
     position: absolute;
     bottom: 20px;

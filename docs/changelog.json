@@ -1,7 +1,23 @@
 {
-  "currentVersion": "1.52.0",
+  "currentVersion": "1.52.1",
   "lastUpdateCheck": null,
   "updates": [
+    {
+      "version": "1.52.1",
+      "date": "2026-10-04",
+      "title": "Retour du pourcentage de taille en RA et corrections",
+      "changes": [
+        "Réalité augmentée : le modèle s'affiche à 100 % (taille réelle) et peut de nouveau être agrandi/rétréci, avec affichage du pourcentage",
+        "Bouton Lecture/Pause : affiché uniquement pour les modèles animés, aussi dans le menu sur smartphone, libellé corrigé",
+        "Favoris : ajout, affichage et rechargement d'un favori réparés",
+        "Bouton Détails réparé (affiche le dossier du modèle)",
+        "Le dossier du modèle s'affiche sous le viewer",
+        "Barre de progression du chargement des modèles fonctionnelle",
+        "Guide RA (main animée) affiché uniquement pendant la recherche de surface",
+        "Cache Service Worker v1.3 → v1.4"
+      ],
+      "type": "fix"
+    },
     {
       "version": "1.52.0",
       "date": "2026-10-04",

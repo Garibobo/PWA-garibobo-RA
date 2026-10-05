@@ -5,7 +5,7 @@
 
 class UpdateManager {
     constructor() {
-        this.currentVersion = "1.52.0";
+        this.currentVersion = "1.52.1";
         this.changelogUrl = "./changelog.json";
         this.lastCheckKey = "garibobo_ra_last_update_check";
         this.lastVersionKey = "garibobo_ra_last_version_seen";

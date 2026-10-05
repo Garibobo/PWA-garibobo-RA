@@ -1,7 +1,7 @@
 // Garibobo RA - Main JavaScript
 // Scan automatique et affichage des modèles 3D
 
-const VERSION = 'V.1.52.0';
+const VERSION = 'V.1.52.1';
 
 const CONFIG = {
     coursePath: '../Cours/',
@@ -69,6 +69,24 @@ function applyModelSources(viewer, glbUrl, usdzUrl = null) {
     } else {
         viewer.removeAttribute('ios-src');
     }
+}
+
+// Libellé du dossier d'un modèle (chemin relatif à Cours/) ou "Local"
+function getFolderLabel(path) {
+    if (!path || path.startsWith('blob:')) return 'Local';
+    const match = decodeURIComponent(path).match(/Cours\/(.*)\/[^/]+$/);
+    return match ? match[1] : '-';
+}
+
+// Affiche les boutons Lecture/Pause (desktop + mobile) si le modèle est animé
+function setupAnimationButtons(viewer) {
+    const buttons = [document.getElementById('btnPlayPause'), document.getElementById('btnPlayPauseMobile')];
+    viewer.addEventListener('load', () => {
+        const animations = viewer.availableAnimations;
+        const hasAnimations = animations && animations.length > 0;
+        buttons.forEach(btn => btn.classList.toggle('no-animation', !hasAnimations));
+        if (hasAnimations) console.log(`✅ ${animations.length} animation(s) détectée(s):`, animations);
+    }, { once: true });
 }
 
 // Détecter automatiquement le repo GitHub depuis l'URL
@@ -237,7 +255,6 @@ function loadModel(item) {
     const viewer = document.getElementById('modelViewer');
     const welcomeScreen = document.getElementById('welcomeScreen');
     const viewerContainer = document.getElementById('viewerContainer');
-    const btnPlayPause = document.getElementById('btnPlayPause');
     const btnAR = document.getElementById('btnAR');
     
     welcomeScreen.style.display = 'none';
@@ -263,20 +280,10 @@ function loadModel(item) {
     document.getElementById('modelTitle').textContent = item.name;
     document.getElementById('modelFile').textContent = item.name;
     document.getElementById('modelFormat').textContent = item.format.toUpperCase();
-    
-    // Charger les annotations existantes pour ce modèle
-    updateAnnotationsOnModel();
+    document.getElementById('modelFolder').textContent = getFolderLabel(item.path);
     
     // Détecter si le modèle a des animations
-    viewer.addEventListener('load', () => {
-        const animations = viewer.availableAnimations;
-        if (animations && animations.length > 0) {
-            btnPlayPause.style.display = 'inline-block';
-            console.log(`✅ ${animations.length} animation(s) détectée(s):`, animations);
-        } else {
-            btnPlayPause.style.display = 'none';
-        }
-    }, { once: true });
+    setupAnimationButtons(viewer);
 }
 
 // Initialisation
@@ -401,6 +408,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         const viewer = document.getElementById('modelViewer');
         viewer.cameraOrbit = 'auto auto auto';
     };
+    
+    // Barre de progression du chargement des modèles
+    const modelViewer = document.getElementById('modelViewer');
+    const progressBar = modelViewer.querySelector('.progress-bar');
+    const updateBar = modelViewer.querySelector('.update-bar');
+    modelViewer.addEventListener('progress', (e) => {
+        const progress = e.detail.totalProgress;
+        updateBar.style.width = `${progress * 100}%`;
+        progressBar.classList.toggle('hide', progress === 1);
+    });
     
     // Placement RA : sol ou mur (persisté)
     function applyArPlacement() {
@@ -636,9 +653,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ℹ️ Détails
     document.getElementById('btnDetails').onclick = () => {
         const modelName = document.getElementById('modelTitle').textContent;
-        const modelPath = document.getElementById('modelPath').textContent;
+        const modelFolder = document.getElementById('modelFolder').textContent;
         const modelFormat = document.getElementById('modelFormat').textContent;
-        alert(`ℹ️ Détails du modèle\n\n📦 Nom: ${modelName}\n📁 Chemin: ${modelPath}\n📱 Format: ${modelFormat}\n\nCliquez sur des parties du modèle pour plus d'informations (bientôt disponible).`);
+        alert(`ℹ️ Détails du modèle\n\n📦 Nom: ${modelName}\n📁 Dossier: ${modelFolder}\n📱 Format: ${modelFormat}\n\nCliquez sur des parties du modèle pour plus d'informations (bientôt disponible).`);
     };
     
     // Options du menu déroulant
@@ -674,11 +691,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     function toggleFavorite() {
         const modelName = document.getElementById('modelTitle').textContent;
-        const modelPath = document.getElementById('modelPath').textContent;
+        const modelPath = state.currentModel;
         const modelFormat = document.getElementById('modelFormat').textContent;
         
-        if (!modelPath || modelPath === '-') {
+        if (!modelPath) {
             alert('⚠️ Aucun modèle chargé\n\nVeuillez d\'abord charger un modèle 3D.');
+            return;
+        }
+        if (modelPath.startsWith('blob:')) {
+            alert('⚠️ Un fichier ouvert depuis votre appareil ne peut pas être ajouté aux favoris.');
             return;
         }
         
@@ -717,10 +738,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             emptyState.style.display = 'none';
             favoritesList.innerHTML = favorites.map((fav, index) => `
                 <div class="favorite-item" data-path="${fav.path}">
-                    <div class="favorite-icon">${fav.format === '.glb' ? '🤖' : '🍎'}</div>
+                    <div class="favorite-icon">📦</div>
                     <div class="favorite-info">
                         <div class="favorite-name">${fav.name}</div>
-                        <div class="favorite-path">${fav.path}</div>
+                        <div class="favorite-path">${getFolderLabel(fav.path)}</div>
                     </div>
                     <div class="favorite-actions">
                         <button class="btn-primary btn-load-favorite" data-index="${index}">📂 Charger</button>
@@ -734,7 +755,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 btn.onclick = () => {
                     const index = parseInt(btn.dataset.index);
                     const fav = favorites[index];
-                    loadModel(fav.path);
+                    loadModel({ name: fav.name, path: fav.path, format: 'glb' });
                     document.getElementById('favoritesModal').style.display = 'none';
                 };
             });
@@ -919,7 +940,6 @@ function loadModelFromCustomSource(item) {
     const viewer = document.getElementById('modelViewer');
     const welcomeScreen = document.getElementById('welcomeScreen');
     const viewerContainer = document.getElementById('viewerContainer');
-    const btnPlayPause = document.getElementById('btnPlayPause');
     
     welcomeScreen.style.display = 'none';
     viewerContainer.style.display = 'block';
@@ -929,17 +949,10 @@ function loadModelFromCustomSource(item) {
     document.getElementById('modelTitle').textContent = item.name;
     document.getElementById('modelFile').textContent = item.name;
     document.getElementById('modelFormat').textContent = item.format.toUpperCase();
+    document.getElementById('modelFolder').textContent = getFolderLabel(item.path);
     
     // Détecter si le modèle a des animations
-    viewer.addEventListener('load', () => {
-        const animations = viewer.availableAnimations;
-        if (animations && animations.length > 0) {
-            btnPlayPause.style.display = 'inline-block';
-            console.log(`✅ ${animations.length} animation(s) détectée(s):`, animations);
-        } else {
-            btnPlayPause.style.display = 'none';
-        }
-    }, { once: true });
+    setupAnimationButtons(viewer);
     
     console.log(`✅ Modèle chargé: ${item.name} (${item.format}) depuis ${item.type}`);
 };
