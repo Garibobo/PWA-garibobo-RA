@@ -1,0 +1,30 @@
+Tâche : bouton « Vue éclatée » pour les modèles contenant une animation nommée eclate. Ne modifie aucune autre fonction existante.
+
+Contexte. Le <model-viewer> a actuellement autoplay et animation-name="*". Certains .glb contiennent une animation eclate : un cycle dont la position éclatée est atteinte à 25 % de la durée (duration * 0.25), tandis que currentTime = 0 correspond à la position assemblée.
+
+1. Au chargement (événement load) de chaque modèle :
+
+si availableAnimations contient eclate : autoplay = false, animationName = 'eclate', pause(), currentTime = 0, et afficher le bouton ;
+sinon : masquer le bouton et garder exactement le comportement actuel (l’autoplay des autres modèles est inchangé) ;
+à chaque changement de modèle, remettre le bouton à l’état « assemblé ».
+
+2. Animation pilotée par currentTime. Laisser le modèle en pause et faire varier currentTime avec requestAnimationFrame. Ne pas utiliser de timeScale négatif.
+
+1er clic : de 0 à duration * 0.25, en temps réel, puis rester éclaté ;
+2e clic : de la position actuelle à 0, à la même vitesse ;
+le bouton est désactivé pendant le mouvement ; en fin de mouvement, forcer la valeur exacte.
+
+3. Bouton. Libellé « Vue éclatée » / « Rassembler », avec aria-label, même style que les boutons existants, placé comme enfant (slot) du <model-viewer>.
+
+4. Caméra. Au 1er clic, mémoriser l’orbite actuelle, passer en douceur à une vue de trois quarts (camera-orbit="35deg 70deg auto"), puis éclater. Au 2e clic, rassembler, puis revenir à l’orbite mémorisée. Ne pas forcer ce retour si l’utilisateur a tourné le modèle entre-temps.
+
+5. Compatibilité :
+
+Dimensions : exclusif avec la vue éclatée. Activer « Vue éclatée » masque les cotes ; activer « Dimensions » en vue éclatée rassemble d’abord.
+Annotations : masquées en vue éclatée, réaffichées une fois rassemblé.
+Couleurs : changer de variante ne modifie ni currentTime ni l’état du bouton.
+RA : juste avant d’entrer en RA, remettre currentTime = 0 et l’état « assemblé ». Ne pas modifier ar-modes.
+
+6. Tests à faire. Modèle avec eclate, modèle sans animation, modèle avec une autre animation (autoplay inchangé), changement de couleur en vue éclatée, Dimensions, annotations, plein écran, favoris, capture, RA Android.
+
+7. Passer la version en 1.51.0 et lister les fichiers modifiés.
