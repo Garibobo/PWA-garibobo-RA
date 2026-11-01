@@ -1,7 +1,7 @@
 // Garibobo RA - Main JavaScript
 // Scan automatique et affichage des modèles 3D
 
-const VERSION = 'V.1.58.1';
+const VERSION = 'V.1.58.2';
 
 const CONFIG = {
     coursePath: '../Cours/',
@@ -620,6 +620,11 @@ const explode = {
     autoplayChanged: false  // autoplay désactivé pour un modèle « eclate » (à rétablir ensuite)
 };
 
+// Session de RA WebXR en cours (recherche du sol ou objet posé)
+function isInAR(viewer) {
+    return ['session-started', 'object-placed'].includes(viewer.getAttribute('ar-status'));
+}
+
 function updateExplodeButton() {
     const viewer = document.getElementById('modelViewer');
     const btn = document.getElementById('btnExplode');
@@ -628,6 +633,13 @@ function updateExplodeButton() {
     btn.textContent = explode.exploded ? 'Rassembler' : 'Vue éclatée';
     btn.setAttribute('aria-label', explode.exploded ? 'Rassembler le modèle' : 'Afficher la vue éclatée du modèle');
     btn.setAttribute('aria-pressed', explode.exploded);
+    // Même bouton dans la colonne d'outils de la RA WebXR
+    const arBtn = document.getElementById('btnArExplode');
+    arBtn.hidden = !explode.available;
+    arBtn.disabled = explode.moving;
+    arBtn.setAttribute('aria-pressed', explode.exploded);
+    arBtn.setAttribute('aria-label', btn.getAttribute('aria-label'));
+    document.getElementById('arExplodeLabel').textContent = btn.textContent;
     // Annotations pédagogiques masquées pendant la vue éclatée (classe utilisée par le CSS)
     viewer.classList.toggle('exploded', explode.exploded || explode.moving);
 }
@@ -635,8 +647,12 @@ function updateExplodeButton() {
 // Fait varier currentTime à vitesse réelle jusqu'à target ; renvoie false si le mouvement a été annulé
 function animateExplodeTo(target, token) {
     const viewer = document.getElementById('modelViewer');
+    // En RA WebXR, requestAnimationFrame de la page peut être suspendu : pas de 16 ms par minuterie
+    const inAR = isInAR(viewer);
+    const schedule = inAR ? (cb) => setTimeout(() => cb(performance.now()), 16) : requestAnimationFrame;
     return new Promise(resolve => {
-        cancelAnimationFrame(explode.frame);
+        cancelExplodeFrame();
+        explode.frameIsTimer = inAR;
         const start = viewer.currentTime;
         const direction = Math.sign(target - start);
         if (direction === 0) {
@@ -655,10 +671,18 @@ function animateExplodeTo(target, token) {
                 return;
             }
             viewer.currentTime = t;
-            explode.frame = requestAnimationFrame(step);
+            explode.frame = schedule(step);
         };
-        explode.frame = requestAnimationFrame(step);
+        explode.frame = schedule(step);
     });
+}
+
+// Annule le pas d'animation en attente (image ou minuterie selon le mode)
+function cancelExplodeFrame() {
+    if (explode.frame == null) return;
+    if (explode.frameIsTimer) clearTimeout(explode.frame);
+    else cancelAnimationFrame(explode.frame);
+    explode.frame = null;
 }
 
 // 1er clic : mémoriser l'orbite, vue de trois quarts, puis éclater
@@ -669,12 +693,15 @@ async function openExplodedView() {
     if (state.dimensionsVisible) setDimensionsVisible(false); // Dimensions et vue éclatée sont exclusives
     explode.moving = true;
     updateExplodeButton();
-    const orbit = viewer.getCameraOrbit();
-    explode.savedOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
-    explode.userMoved = false;
-    viewer.cameraOrbit = EXPLODE_ORBIT;
-    await new Promise(r => setTimeout(r, EXPLODE_CAMERA_DELAY));
-    if (token !== explode.token) return;
+    // En RA, la caméra est le téléphone : pas de vue de trois quarts ni d'orbite à mémoriser
+    if (!isInAR(viewer)) {
+        const orbit = viewer.getCameraOrbit();
+        explode.savedOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
+        explode.userMoved = false;
+        viewer.cameraOrbit = EXPLODE_ORBIT;
+        await new Promise(r => setTimeout(r, EXPLODE_CAMERA_DELAY));
+        if (token !== explode.token) return;
+    }
     if (!(await animateExplodeTo(viewer.duration * 0.25, token))) return;
     explode.moving = false;
     explode.exploded = true;
@@ -690,7 +717,7 @@ async function closeExplodedView() {
     explode.moving = true;
     updateExplodeButton();
     if (!(await animateExplodeTo(0, token))) return false;
-    if (!explode.userMoved && explode.savedOrbit) viewer.cameraOrbit = explode.savedOrbit;
+    if (!explode.userMoved && explode.savedOrbit && !isInAR(viewer)) viewer.cameraOrbit = explode.savedOrbit;
     explode.moving = false;
     explode.exploded = false;
     explode.savedOrbit = null;
@@ -702,8 +729,7 @@ async function closeExplodedView() {
 function resetExplodedView() {
     const viewer = document.getElementById('modelViewer');
     explode.token++;
-    cancelAnimationFrame(explode.frame);
-    explode.frame = null;
+    cancelExplodeFrame();
     explode.moving = false;
     explode.exploded = false;
     explode.savedOrbit = null;
@@ -1483,10 +1509,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Vue éclatée : préparée à chaque chargement (nouveau modèle ou bascule annotations), état « assemblé »
     modelViewer.addEventListener('load', setupExplodedView);
-    document.getElementById('btnExplode').addEventListener('click', () => {
+    ['btnExplode', 'btnArExplode'].forEach(id => document.getElementById(id).addEventListener('click', () => {
         if (explode.exploded) closeExplodedView();
         else openExplodedView();
-    });
+    }));
     // Rotation par l'utilisateur pendant la vue éclatée : on ne forcera pas le retour à l'orbite mémorisée
     modelViewer.addEventListener('camera-change', (e) => {
         if (e.detail?.source === 'user-interaction' && (explode.exploded || explode.moving)) explode.userMoved = true;
