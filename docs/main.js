@@ -1,7 +1,7 @@
 // Garibobo RA - Main JavaScript
 // Scan automatique et affichage des modèles 3D
 
-const VERSION = 'V.1.58.2';
+const VERSION = 'V.1.60.0';
 
 const CONFIG = {
     coursePath: '../Cours/',
@@ -43,7 +43,8 @@ const state = {
     currentVariant: null, // Couleur choisie (conservée lors du basculement annotations)
     dimensionsVisible: false, // 📏 Cotes affichées (conservé au changement de modèle)
     lighting: localStorage.getItem('lighting') || 'studio', // 💡 Ambiance d'éclairage
-    gestures: loadGestureOptions() // 👆 Rotation auto / déplacement / zoom
+    gestures: loadGestureOptions(), // 👆 Rotation auto / déplacement / zoom
+    wallColor: localStorage.getItem('wall_color') || null // 🎨 Code NCS du mur simulé (fond du lecteur)
 };
 
 // Détecter la plateforme
@@ -374,6 +375,90 @@ function applyGestureOptions() {
     viewer.toggleAttribute('auto-rotate', opts.autoRotate && !measure.active);
     viewer.toggleAttribute('disable-pan', !opts.pan);
     viewer.toggleAttribute('disable-zoom', !opts.zoom);
+}
+
+// 🎨 Couleur du mur (NCS) : le fond du lecteur 3D prend la couleur choisie (mémorisée sur l'appareil).
+// Couleurs sRGB approchées, indicatives à l'écran ; le mur filmé en RA n'est pas modifié. NCS © NCS Colour AB
+const WALL_COLOR_KEY = 'wall_color';
+const NCS_COLORS = [
+    // Blancs et gris neutres (N)
+    { code: 'S 0300-N', hex: '#F6F6F6', family: 'blanc' },
+    { code: 'S 0500-N', hex: '#F0F0F0', family: 'blanc' },
+    { code: 'S 1000-N', hex: '#E2E2E2', family: 'gris clair' },
+    { code: 'S 1500-N', hex: '#D0D0D0', family: 'gris clair' },
+    { code: 'S 2000-N', hex: '#BFBFBF', family: 'gris' },
+    { code: 'S 3000-N', hex: '#9A9A9A', family: 'gris' },
+    { code: 'S 4000-N', hex: '#7F7F7F', family: 'gris foncé' },
+    { code: 'S 5000-N', hex: '#656565', family: 'gris foncé' },
+    // Blancs cassés et beiges (Y, Y20R, Y30R, Y50R)
+    { code: 'S 0502-Y', hex: '#F5F3EA', family: 'blanc cassé' },
+    { code: 'S 0502-Y50R', hex: '#F6EFE9', family: 'blanc cassé rosé' },
+    { code: 'S 0505-Y20R', hex: '#F7EFDF', family: 'blanc crème' },
+    { code: 'S 1002-Y', hex: '#E7E4D9', family: 'beige clair' },
+    { code: 'S 1005-Y20R', hex: '#EBE2D0', family: 'beige clair' },
+    { code: 'S 1010-Y20R', hex: '#EADBBF', family: 'beige' },
+    { code: 'S 2005-Y20R', hex: '#D1C8B7', family: 'beige gris' },
+    { code: 'S 2010-Y30R', hex: '#CDBDA7', family: 'beige sable' },
+    // Jaunes clairs
+    { code: 'S 0520-Y', hex: '#FBEFBE', family: 'jaune clair' },
+    { code: 'S 1020-Y10R', hex: '#F2DFB3', family: 'jaune paille' },
+    // Gris-bleus et gris-verts (B, B20G)
+    { code: 'S 1002-B', hex: '#DFE3E4', family: 'gris bleu clair' },
+    { code: 'S 1502-B', hex: '#CED3D5', family: 'gris bleu' },
+    { code: 'S 2002-B', hex: '#BDC3C6', family: 'gris bleu' },
+    { code: 'S 1010-B', hex: '#CFDEE6', family: 'bleu pâle' },
+    { code: 'S 1005-B20G', hex: '#D9E2E2', family: 'gris vert clair' },
+    { code: 'S 2005-B20G', hex: '#C2CECE', family: 'gris vert' },
+    // Verts
+    { code: 'S 1005-G20Y', hex: '#DCE2D1', family: 'vert pâle' },
+    { code: 'S 1510-G20Y', hex: '#CAD4BB', family: 'vert clair' },
+    { code: 'S 2010-G30Y', hex: '#BBC2A5', family: 'vert olive clair' },
+    { code: 'S 3020-G30Y', hex: '#95A577', family: 'vert olive' },
+    // Rouges, roses et terre cuite
+    { code: 'S 1020-Y80R', hex: '#E5C1B5', family: 'rose poudré' },
+    { code: 'S 2030-Y70R', hex: '#D29C82', family: 'terre cuite clair' },
+    { code: 'S 3050-Y80R', hex: '#B35946', family: 'rouge brique' },
+    { code: 'S 4050-Y90R', hex: '#9A3939', family: 'rouge foncé' }
+];
+
+function applyWallColor(code) {
+    const viewer = document.getElementById('modelViewer');
+    const color = NCS_COLORS.find(c => c.code === code) || null;
+    state.wallColor = color ? color.code : null;
+    viewer.style.backgroundColor = color ? color.hex : '';
+    viewer.classList.toggle('wall-custom', !!color);
+    if (color) localStorage.setItem(WALL_COLOR_KEY, color.code);
+    else localStorage.removeItem(WALL_COLOR_KEY);
+    document.getElementById('wallNone').setAttribute('aria-pressed', String(!color));
+    document.querySelectorAll('.wall-swatch').forEach(btn => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.code === state.wallColor));
+    });
+}
+
+// Grille de pastilles, filtrée par le champ de recherche (code ou famille de couleur, espaces ignorés)
+function renderWallGrid(filter = '') {
+    const grid = document.getElementById('wallGrid');
+    const query = filter.trim().toLowerCase().replace(/\s+/g, '');
+    const shown = NCS_COLORS.filter(c => !query || `${c.code}${c.family}`.toLowerCase().replace(/\s+/g, '').includes(query));
+    grid.innerHTML = '';
+    shown.forEach(c => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'wall-swatch';
+        btn.dataset.code = c.code;
+        btn.title = `${c.code} — ${c.family}`;
+        btn.setAttribute('aria-pressed', String(c.code === state.wallColor));
+        const chip = document.createElement('span');
+        chip.className = 'wall-chip';
+        chip.style.backgroundColor = c.hex;
+        const label = document.createElement('span');
+        label.className = 'wall-code';
+        label.textContent = c.code;
+        btn.append(chip, label);
+        btn.onclick = () => applyWallColor(c.code);
+        grid.appendChild(btn);
+    });
+    document.getElementById('wallEmpty').hidden = shown.length > 0;
 }
 
 // 📍 Mesure entre 2 points : toucher / cliquer deux points du modèle → distance en mm (ligne + étiquette)
@@ -764,6 +849,96 @@ async function setupExplodedView() {
         viewer.play();
     }
     updateExplodeButton();
+}
+
+// ===========================
+// 🔐 RÉINITIALISER LES DROITS : état des autorisations, caméra, réglages du site
+// (un site ne peut pas effacer lui-même les autorisations du navigateur : la fenêtre explique la procédure)
+// ===========================
+
+// Réglages enregistrés par le site, effacés par « Réinitialiser les réglages du site »
+// (les favoris et le thème clair / sombre sont conservés)
+const SITE_SETTING_KEYS = ['ar_mode', 'ar_placement', 'lighting', 'gesture_options', 'annotations_visible', 'sidebar_width', WALL_COLOR_KEY, TREE_CACHE_KEY];
+
+function detectBrowserName() {
+    const ua = navigator.userAgent;
+    if (/SamsungBrowser/i.test(ua)) return 'Samsung Internet';
+    if (navigator.brave) return 'Brave';
+    if (/EdgA?\//i.test(ua)) return 'Edge';
+    if (/Firefox|FxiOS/i.test(ua)) return 'Firefox';
+    if (/CriOS/i.test(ua)) return 'Chrome (iPhone)';
+    if (/Chrome\//i.test(ua)) return 'Chrome';
+    if (/Safari/i.test(ua)) return 'Safari';
+    return 'Navigateur inconnu';
+}
+
+async function renderRightsStatus() {
+    const list = document.getElementById('rightsStatus');
+    const installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    let camera = 'inconnue (le navigateur ne l\'indique pas)';
+    try {
+        const status = await navigator.permissions.query({ name: 'camera' });
+        camera = { granted: '✅ autorisée', denied: '❌ refusée', prompt: '❔ sera demandée' }[status.state] || status.state;
+    } catch (e) { /* API non disponible (Safari, Firefox…) */ }
+    let webxr = '—';
+    try {
+        webxr = (await navigator.xr?.isSessionSupported('immersive-ar')) ? '✅ disponible' : '❌ indisponible';
+    } catch (e) {
+        webxr = '❌ indisponible';
+    }
+    const rows = [
+        ['Navigateur', `${detectBrowserName()}${installed ? ' — application installée' : ''}`],
+        ['Connexion sécurisée', window.isSecureContext ? '✅ oui' : '❌ non'],
+        ['Caméra', camera],
+        ['RA Web (WebXR)', webxr],
+        ['Mode RA (Android)', state.arMode === 'web' ? 'Web' : 'Natif (application Google)']
+    ];
+    list.innerHTML = '';
+    rows.forEach(([label, value]) => {
+        const li = document.createElement('li');
+        const strong = document.createElement('strong');
+        strong.textContent = `${label} : `;
+        li.append(strong, value);
+        list.appendChild(li);
+    });
+}
+
+function openRightsModal() {
+    document.getElementById('rightsResult').textContent = '';
+    document.getElementById('rightsModal').style.display = 'flex';
+    renderRightsStatus();
+}
+
+// Redemande l'accès à la caméra (la fenêtre du navigateur ne réapparaît que si l'accès n'a pas été refusé)
+async function askCameraAccess() {
+    const result = document.getElementById('rightsResult');
+    if (!navigator.mediaDevices?.getUserMedia) {
+        result.textContent = '❌ Ce navigateur ne permet pas de demander la caméra.';
+        return;
+    }
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        stream.getTracks().forEach(track => track.stop());
+        result.textContent = '✅ Accès à la caméra autorisé.';
+    } catch (error) {
+        result.textContent = error.name === 'NotAllowedError'
+            ? '❌ Accès refusé : le navigateur ne redemande plus. Suivez la procédure de votre appareil ci-dessous.'
+            : `❌ Caméra indisponible (${error.name}).`;
+    }
+    renderRightsStatus();
+}
+
+// Efface les réglages du site, le cache hors-ligne et le Service Worker, puis recharge la page
+async function resetSiteSettings() {
+    if (!confirm('Réinitialiser les réglages du site ?\n\nMode RA, placement, éclairage, gestes, couleur du mur, largeur du menu et liste des cours enregistrée seront effacés.\nVos favoris et le thème sont conservés.')) return;
+    SITE_SETTING_KEYS.forEach(key => localStorage.removeItem(key));
+    try {
+        if ('caches' in window) await Promise.all((await caches.keys()).map(key => caches.delete(key)));
+        if ('serviceWorker' in navigator) await Promise.all((await navigator.serviceWorker.getRegistrations()).map(reg => reg.unregister()));
+    } catch (e) {
+        console.warn('⚠️ Cache hors-ligne non effacé', e);
+    }
+    location.reload();
 }
 
 // RA WebXR : model-viewer n'expose pas l'échelle en RA. On lit son moteur RA interne
@@ -1857,8 +2032,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('gesturesModal').style.display = 'none';
     };
     
-    // Fenêtres Gestes et Quiz : fermeture en cliquant à côté
-    ['gesturesModal', 'quizModal'].forEach(id => {
+    // 🎨 Couleur du mur (NCS) : fond du lecteur, mémorisée sur l'appareil
+    applyWallColor(state.wallColor);
+    document.getElementById('btnWallColor').onclick = () => {
+        const search = document.getElementById('wallSearch');
+        search.value = '';
+        renderWallGrid();
+        document.getElementById('wallModal').style.display = 'flex';
+    };
+    document.getElementById('closeWallModal').onclick = () => {
+        document.getElementById('wallModal').style.display = 'none';
+    };
+    document.getElementById('wallSearch').oninput = (e) => renderWallGrid(e.target.value);
+    document.getElementById('wallNone').onclick = () => applyWallColor(null);
+    
+    // 🔐 Réinitialiser les droits (bas du menu et encadré « La RA ne s'ouvre pas ? »)
+    ['btnResetRights', 'btnHelpRights'].forEach(id => { document.getElementById(id).onclick = openRightsModal; });
+    document.getElementById('closeRightsModal').onclick = () => { document.getElementById('rightsModal').style.display = 'none'; };
+    document.getElementById('btnAskCamera').onclick = askCameraAccess;
+    document.getElementById('btnResetSite').onclick = resetSiteSettings;
+    
+    // Fenêtres Gestes, Couleur du mur, Quiz et Droits : fermeture en cliquant à côté
+    ['gesturesModal', 'wallModal', 'quizModal', 'rightsModal'].forEach(id => {
         document.getElementById(id).addEventListener('click', (e) => {
             if (e.target.id === id) e.target.style.display = 'none';
         });

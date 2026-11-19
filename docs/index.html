@@ -86,6 +86,8 @@
                 <div class="loading">Chargement des cours...</div>
             </nav>
             <p class="brand-disclaimer" id="menuDisclaimer" hidden>Modèles 3D originaux © Feller SA. Utilisés à des fins strictement pédagogiques et non lucratives pour l'enseignement technique.</p>
+            <!-- Autorisations (caméra, RA, ouverture d'autres applications) : état, réglages du site, aide -->
+            <button type="button" class="btn-reset-rights" id="btnResetRights" title="Vérifier et réinitialiser les autorisations (caméra, réalité augmentée…)">🔐 Réinitialiser les droits</button>
         </aside>
 
         <!-- Poignée : glisser pour élargir / réduire le menu (double-clic = largeur par défaut) -->
@@ -154,6 +156,10 @@
                                 <button class="dropdown-item" id="btnGestures">
                                     <span class="icon">👆</span>
                                     <span class="text">Gestes et commandes</span>
+                                </button>
+                                <button class="dropdown-item" id="btnWallColor">
+                                    <span class="icon">🎨</span>
+                                    <span class="text">Couleur du mur (NCS)</span>
                                 </button>
                                 <button class="dropdown-item" id="btnFavorites">
                                     <span class="icon">⭐</span>
@@ -296,6 +302,21 @@
 
                 <p class="brand-disclaimer" id="modelDisclaimer" hidden></p>
 
+                <!-- Aide rapide : la RA ne s'ouvre pas -->
+                <details class="ar-help-box" id="arHelpBox">
+                    <summary>🥽 La RA ne s'ouvre pas ?</summary>
+                    <ol>
+                        <li><strong>Navigateur :</strong> Chrome sur Android, Safari sur iPhone / iPad.</li>
+                        <li><strong>Autoriser la caméra :</strong>
+                            <br>Android (Chrome) : cadenas à côté de l'adresse → <em>Autorisations</em> → <em>Caméra</em> → <em>Autoriser</em>.
+                            <br>iPhone / iPad : <em>Réglages</em> → <em>Safari</em> → <em>Caméra</em> → <em>Autoriser</em>.</li>
+                        <li><strong>« Google s'est arrêté » ou écran noir :</strong> dans Chrome Android, ⚙️ Options → <em>Mode RA : Web</em>.</li>
+                        <li><strong>Le sol n'est pas détecté :</strong> pièce bien éclairée, sol avec des motifs (pas uni ni brillant), bouger lentement le téléphone.</li>
+                        <li><strong>Mises à jour :</strong> dans le Play Store, mettre à jour « Google » et « Services Google Play pour la RA ».</li>
+                    </ol>
+                    <button type="button" class="btn-secondary" id="btnHelpRights">🔐 Réinitialiser les droits</button>
+                </details>
+
                 <div class="model-info" id="modelInfo">
                     <div class="info-item">
                         <span class="info-label">📁 Dossier:</span>
@@ -316,7 +337,7 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p>Réalisé par Amir Garibovic - Domaine 3 Électricité - V.1.58.2</p>
+        <p>Réalisé par Amir Garibovic - Domaine 3 Électricité - V.1.60.0</p>
     </footer>
 
     <!-- Install Prompt -->
@@ -437,6 +458,84 @@
                     <label class="switch-row"><input type="checkbox" id="optPan"> ✋ Déplacement du modèle (2 doigts / clic droit)</label>
                     <label class="switch-row"><input type="checkbox" id="optZoom"> 🔍 Zoom du modèle (pincement / molette)</label>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Couleur du mur (NCS) : fond du lecteur 3D, couleurs sRGB approchées -->
+    <div class="modal" id="wallModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎨 Couleur du mur (NCS)</h2>
+                <button class="modal-close" id="closeWallModal">&times;</button>
+            </div>
+            <div class="modal-body wall-body">
+                <p class="wall-intro">Le fond de la vue 3D prend la couleur du mur choisie, comme si l'appareil était posé sur ce mur. Le mur filmé en RA n'est pas modifié.</p>
+                <input type="search" class="wall-search" id="wallSearch" placeholder="🔍 Rechercher un code (ex. 0502-Y, 1502, gris…)" autocomplete="off" aria-label="Rechercher un code NCS">
+                <button type="button" class="wall-none" id="wallNone" aria-pressed="true">⬜ Aucune (fond par défaut)</button>
+                <div class="wall-grid" id="wallGrid" role="group" aria-label="Nuancier NCS"></div>
+                <p class="wall-empty" id="wallEmpty" hidden>Aucun code ne correspond.</p>
+                <p class="wall-note">Couleur indicative à l'écran, se référer au nuancier NCS officiel. NCS © NCS Colour AB</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Réinitialiser les droits -->
+    <div class="modal" id="rightsModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔐 Réinitialiser les droits</h2>
+                <button class="modal-close" id="closeRightsModal">&times;</button>
+            </div>
+            <div class="modal-body rights-body">
+                <h3>État sur cet appareil</h3>
+                <ul class="rights-status" id="rightsStatus"></ul>
+                <div class="rights-actions">
+                    <button type="button" class="btn-primary" id="btnAskCamera">📷 Redemander l'accès à la caméra</button>
+                    <button type="button" class="btn-secondary" id="btnResetSite">🔄 Réinitialiser les réglages du site</button>
+                </div>
+                <p class="rights-result" id="rightsResult" role="status"></p>
+
+                <h3>Autorisations du navigateur</h3>
+                <p class="rights-note">Pour votre sécurité, un site ne peut pas effacer lui-même les autorisations déjà données ou refusées
+                    (caméra, ouverture d'une autre application…). Suivez la procédure de votre appareil :</p>
+                <details>
+                    <summary>🤖 Android – Chrome (site ou application installée)</summary>
+                    <ol>
+                        <li>Ouvrez le site dans Chrome, touchez le <strong>cadenas</strong> à gauche de l'adresse.</li>
+                        <li><em>Autorisations</em> → <em>Caméra</em> : <strong>Autoriser</strong> (ou <em>Réinitialiser les autorisations</em> pour tout redemander).</li>
+                        <li>L'application installée utilise les mêmes autorisations que le site dans Chrome.</li>
+                    </ol>
+                </details>
+                <details>
+                    <summary>🌐 Android – Samsung Internet ou Brave</summary>
+                    <ol>
+                        <li>Menu du navigateur (☰ ou ⋮) → <em>Paramètres</em> → autorisations des sites (le nom varie selon la version).</li>
+                        <li>Choisissez le site Garibobo → <em>Caméra</em> : <strong>Autoriser</strong>.</li>
+                        <li>Ces navigateurs n'ont pas la RA Web : la RA passe par l'application Google. Si elle s'arrête, utilisez Chrome.</li>
+                    </ol>
+                </details>
+                <details>
+                    <summary>↩️ Android – « Ouvrir avec » / quitter le site pour une autre application</summary>
+                    <ol>
+                        <li>Si vous avez choisi « Toujours » ou « Jamais » pour ouvrir l'application Google depuis le navigateur :</li>
+                        <li><em>Paramètres Android</em> → <em>Applications</em> → votre navigateur (Chrome, Samsung Internet…) → <em>Ouvrir par défaut</em> / <em>Définir par défaut</em> → <strong>Effacer les valeurs par défaut</strong>.</li>
+                        <li>La question sera de nouveau posée à la prochaine ouverture de la RA.</li>
+                    </ol>
+                </details>
+                <details>
+                    <summary>🍎 iPhone / iPad – Safari</summary>
+                    <ol>
+                        <li><em>Réglages</em> → <em>Safari</em> → <em>Caméra</em> : <strong>Autoriser</strong> ou <em>Demander</em>.</li>
+                        <li>Pour tout effacer : <em>Réglages</em> → <em>Safari</em> → <em>Avancé</em> → <em>Données de sites web</em> → supprimer « garibobo.github.io ».</li>
+                    </ol>
+                </details>
+                <details>
+                    <summary>💻 Ordinateur</summary>
+                    <ol>
+                        <li>Cliquez sur le <strong>cadenas</strong> à gauche de l'adresse → <em>Paramètres du site</em> → <strong>Réinitialiser les autorisations</strong>.</li>
+                    </ol>
+                </details>
             </div>
         </div>
     </div>

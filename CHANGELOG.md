@@ -4,6 +4,63 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 
 ---
 
+## [V.1.60.0] - 18 Novembre 2026
+
+### ✨ Ajouté
+
+- `#btnWallColor` « 🎨 Couleur du mur (NCS) » dans ⚙️ Options et fenêtre `#wallModal` (même style que Gestes / Quiz / Droits) : grille `#wallGrid` de 32 pastilles `NCS_COLORS` (code sous chaque pastille), champ `#wallSearch` (code ou famille, espaces ignorés), bouton `#wallNone` « Aucune (fond par défaut) », mention « Couleur indicative à l'écran, se référer au nuancier NCS officiel. NCS © NCS Colour AB »
+- `applyWallColor()` : `model-viewer.style.backgroundColor` = couleur sRGB approchée + classe `wall-custom` ; le thème clair / sombre du site et la RA (`ar-modes`, outils, bandeau des couleurs) ne changent pas ; l'accueil garde son fond
+- `state.wallColor` mémorisé (`localStorage` `wall_color`), conservé au changement de modèle, ajouté à `SITE_SETTING_KEYS` (effacé par « Réinitialiser les réglages du site »)
+- `model-viewer.wall-custom` : halo `drop-shadow` sur `.dim-lines` / `.mes-lines`, trait des cotes `#0d7fb3` pour le contraste sur mur clair
+- Téléphone (≤ 768 px ou hauteur ≤ 500 px) : pastilles 48 px, colonnes 78 px, fenêtre défilante
+
+### 🔄 Modifié
+
+- Service Worker : cache `v1.21` → `v1.22`
+
+### 🧪 Testé
+
+- Chrome PC et simulation téléphone 390 × 844 et 844 × 390 (CDP) : ouverture de la fenêtre, recherche, choix d'une pastille, « Aucune », mémorisation après rechargement, fond du lecteur, lisibilité des cotes
+
+---
+
+## [V.1.59.1] - 18 Novembre 2026
+
+### 🔄 Modifié
+
+- ≤ 768 px ou hauteur ≤ 500 px : `.dropdown-menu` en `position: fixed` (bas de l'écran, marges 8 px, `max-height: 65dvh`, défilement) au lieu d'être accroché sous le bouton (il sortait de l'écran) ; `.dropdown-item` 36 px, police 12 px, icônes 14 px
+- Service Worker : cache `v1.20` → `v1.21`
+
+### 🧪 Testé
+
+- Chrome, simulation téléphone 390 × 844 et 844 × 390 : menu entièrement dans l'écran (11 éléments, défilement en paysage)
+
+---
+
+## [V.1.59.0] - 5 Novembre 2026
+
+### ✨ Ajouté
+
+- RA WebXR : `#btnArExplode` (↔) dans `#arTools`, synchronisé par `updateExplodeButton()` ; en RA pas de vue de trois quarts ni de retour d'orbite (`isInAR()`), pas d'animation par minuterie 16 ms au lieu de `requestAnimationFrame` (`cancelExplodeFrame()`)
+- `#btnResetRights` « 🔐 Réinitialiser les droits » (bas du menu, collant) et `#rightsModal` : `renderRightsStatus()` (navigateur, application installée, connexion sécurisée, `permissions.query('camera')`, `immersive-ar`, mode RA), `askCameraAccess()` (`getUserMedia`), `resetSiteSettings()` (efface `SITE_SETTING_KEYS`, Cache Storage et Service Worker ; favoris et thème conservés), procédures Android Chrome / Samsung Internet / Brave / « Ouvrir par défaut » / iPhone / PC
+- Encadré `#arHelpBox` « 🥽 La RA ne s'ouvre pas ? » (`<details>` sous le lecteur) avec accès à la fenêtre des droits
+
+### 🔄 Modifié
+
+- `#arTools` : en bas à gauche (`bottom: 80px`, 24 px sans couleurs), largeur 64 px, boutons 46 px / 12 px, indicateur d'échelle 13 px ; `.ar-variant-list .variant-btn` 34 px, police `0.95rem − 2px`
+- Service Worker : cache `v1.18` → `v1.20`
+
+### 🧪 Testé
+
+- Galaxy Note10+ (SM-N975F, Android 12, Chrome 146) par débogage USB : RA Web OK (sol détecté en 1,5 s, Taille réelle, Dimensions), Vue éclatée en RA
+- Chrome PC : fenêtre des droits, réinitialisation (mode RA effacé, favoris conservés), bouton visible en bas du menu
+
+### 🔍 Diagnostic RA mode Natif
+
+- Journal Android du Note10+ : `StackOverflowError` dans `com.google.android.apps.search.sceneviewer.ViewerActivity` (boucle `CreatePeer` → `finish`) : plantage de l'application Google 17.66, reproduit avec le modèle officiel Google `Astronaut.glb` sans le site → contournement : Mode RA Web dans Chrome
+
+---
+
 ## [V.1.58.1] - 1er Novembre 2026
 
 ### ✨ Ajouté

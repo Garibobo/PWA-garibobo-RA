@@ -1,7 +1,44 @@
 {
-  "currentVersion": "1.58.1",
+  "currentVersion": "1.60.0",
   "lastUpdateCheck": null,
   "updates": [
+    {
+      "version": "1.60.0",
+      "date": "2026-11-18",
+      "title": "Couleur du mur (nuancier NCS) dans la vue 3D",
+      "changes": [
+        "⚙️ Options → « 🎨 Couleur du mur (NCS) » : fenêtre avec 32 pastilles de codes NCS courants en bâtiment (blancs et gris N, beiges Y / Y20R, gris-bleus, verts, rouges…), recherche par code et option « Aucune (fond par défaut) »",
+        "Le fond de la vue 3D prend la couleur choisie, comme si l'appareil était posé sur ce mur (couleur sRGB indicative, se référer au nuancier NCS officiel) ; le mur filmé en RA n'est pas modifié",
+        "Couleur mémorisée sur l'appareil, conservée au changement de modèle et effacée par « Réinitialiser les réglages du site »",
+        "Cotes et mesure entre 2 points : léger halo sur les lignes pour rester lisibles sur un mur clair",
+        "Cache Service Worker v1.21 → v1.22"
+      ],
+      "type": "feature"
+    },
+    {
+      "version": "1.59.1",
+      "date": "2026-11-18",
+      "title": "Menu Options adapté au téléphone",
+      "changes": [
+        "Sur téléphone, le menu ⚙️ Options s'ouvre en panneau en bas de l'écran : il reste entièrement visible et défile s'il est trop long",
+        "Texte du menu Options plus petit sur téléphone (12 px), en portrait comme en paysage",
+        "Cache Service Worker v1.20 → v1.21"
+      ],
+      "type": "fix"
+    },
+    {
+      "version": "1.59.0",
+      "date": "2026-11-05",
+      "title": "Vue éclatée en RA, boutons RA compacts et aide aux autorisations",
+      "changes": [
+        "En RA Web : bouton « ↔ Vue éclatée / Rassembler » dans la colonne d'outils",
+        "Colonne d'outils RA plus compacte, en bas à gauche au-dessus du bandeau des couleurs ; pastilles de couleur plus petites",
+        "Bouton « 🔐 Réinitialiser les droits » en bas à gauche du menu : état de la caméra et de la RA, redemande de la caméra, réinitialisation des réglages du site (favoris conservés) et procédure pour Android, iPhone et PC",
+        "Encadré « 🥽 La RA ne s'ouvre pas ? » sous le lecteur : autoriser la caméra, Mode RA Web, détection du sol, mises à jour",
+        "Cache Service Worker v1.18 → v1.20"
+      ],
+      "type": "feature"
+    },
     {
       "version": "1.58.1",
       "date": "2026-11-01",

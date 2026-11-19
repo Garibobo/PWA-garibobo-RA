@@ -1,5 +1,5 @@
 // Service Worker pour Garibobo RA
-const CACHE_NAME = 'garibobo-ra-v1.19';
+const CACHE_NAME = 'garibobo-ra-v1.22';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
